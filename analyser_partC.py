@@ -154,139 +154,96 @@ class PartCAnalyser:
                      [stats_summary[s]['plr_ci_upper'] - stats_summary[s]['plr_mean'] 
                       for s in scenarios]]
 
-        # Create figure with two charts - larger size and more spacing
+        # Create figure with two charts
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(25, 10))
 
         # Define colors for better visual distinction
         colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
         
-        # Chart 1: Goodput with confidence intervals
+        # Create figure with subplots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
+        
+        # Plot 1: Goodput with confidence intervals
         x_pos = np.arange(len(scenarios))
-        width = 0.6  # Bar width
+        bars1 = ax1.bar(x_pos, goodput_means, yerr=goodput_errors, 
+                       capsize=5, alpha=0.7, color=['skyblue', 'lightcoral', 'lightgreen', 'gold'])
 
-        bars1 = ax1.bar(x_pos, goodput_means, width=width, yerr=goodput_errors, 
-                       capsize=10, alpha=0.8, color=colors, edgecolor='black', linewidth=1)
-
-        ax1.set_xlabel('TCP Algorithms', fontsize=14, fontweight='bold')
-        ax1.set_ylabel('Goodput (Mbps)', fontsize=14, fontweight='bold')
+        ax1.set_xlabel('TCP Algorithms', fontsize=12)
+        ax1.set_ylabel('Goodput (Mbps)', fontsize=12)
         ax1.set_title('Goodput Comparison with 95% Confidence Intervals\n(5 Runs Each)', 
-                     fontsize=14, fontweight='bold', pad=25)
+                     fontsize=14, fontweight='bold')
         ax1.set_xticks(x_pos)
-        ax1.set_xticklabels([s.upper() for s in scenarios], fontsize=13, fontweight='bold')
+        ax1.set_xticklabels([s.upper() for s in scenarios])
         ax1.grid(True, alpha=0.3, axis='y')
 
-        # Adjust Y-axis limits for goodput to provide space for labels
-        max_goodput = max(goodput_means) if max(goodput_means) > 0 else 0.1
-        ax1.set_ylim(0, max_goodput * 1.35)  # 35% headroom for labels
-        
-        # Add value labels on bars with better positioning
+        # Add value labels on bars
         for i, bar in enumerate(bars1):
             height = bar.get_height()
-            error_margin = goodput_errors[1][i]  # Use upper error for positioning
+            ax1.text(bar.get_x() + bar.get_width()/2., height + 0.001,
+                    f'{height:.4f}', ha='center', va='bottom', fontsize=10)
 
-            # Position label just above the error bar with small margin
-            label_height = height + error_margin + 0.1
-            ax1.text(bar.get_x() + bar.get_width()/2., label_height,
-                    f'{height:.4f}\n±{error_margin:.4f}', 
-                    ha='center', va='bottom', fontsize=11, fontweight='bold',
-                    bbox=dict(boxstyle="round,pad=0.3", facecolor='lightyellow', alpha=0.9, edgecolor='gray'))
-
-        # Chart 2: PLR with confidence intervals
-        bars2 = ax2.bar(x_pos, plr_means, width=width, yerr=plr_errors,
-                       capsize=10, alpha=0.8, color=colors, edgecolor='black', linewidth=1)
+        # Plot 2: PLR with confidence intervals
+        bars2 = ax2.bar(x_pos, plr_means, yerr=plr_errors,
+                       capsize=5, alpha=0.7, color=['skyblue', 'lightcoral', 'lightgreen', 'gold'])
         
-        ax2.set_xlabel('TCP Algorithms', fontsize=14, fontweight='bold')
-        ax2.set_ylabel('Packet Loss Rate (%)', fontsize=14, fontweight='bold')
-        ax2.set_title('Packet Loss Rate with 95% Confidence Intervals \n(5 Runs Each)', 
-                     fontsize=14, fontweight='bold', pad=25)
+        ax2.set_xlabel('TCP Algorithms', fontsize=12)
+        ax2.set_ylabel('Packet Loss Rate (%)', fontsize=12)
+        ax2.set_title('Packet Loss Rate with 95% Confidence Intervals\n(5 Runs Each)', 
+                     fontsize=14, fontweight='bold')
         ax2.set_xticks(x_pos)
-        ax2.set_xticklabels([s.upper() for s in scenarios], fontsize=13, fontweight='bold')
+        ax2.set_xticklabels([s.upper() for s in scenarios])
         ax2.grid(True, alpha=0.3, axis='y')
-
-        # Adjust Y-axis limits for PLR to provide space for labels
-        max_plr = max(plr_means) if max(plr_means) > 0 else 5
-        ax2.set_ylim(0, max_plr * 1.5)  # 50% headroom for PLR labels
         
-        # Add value labels on bars with better positioning for PLR
+        # Add value labels on bars
         for i, bar in enumerate(bars2):
             height = bar.get_height()
-            error_margin = plr_errors[1][i]  # Use upper error for positioning
-
-            # Position label just above the error bar
-            label_height = height + error_margin + 0.1
-            ax2.text(bar.get_x() + bar.get_width()/2., label_height,
-                    f'{height:.2f}%\n±{error_margin:.2f}%', 
-                    ha='center', va='bottom', fontsize=11, fontweight='bold',
-                    bbox=dict(boxstyle="round,pad=0.3", facecolor='lightyellow', alpha=0.9, edgecolor='gray'))
-
-        # Add overall figure title
-        fig.suptitle('TCP Algorithm Performance: Reproducibility Analysis (5 Runs)', 
-                    fontsize=18, fontweight='bold', y=0.98)
+            ax2.text(bar.get_x() + bar.get_width()/2., height + 0.001,
+                    f'{height:.2f}%', ha='center', va='bottom', fontsize=10)
         
-        # Adjust layout with more spacing between subplots
         plt.tight_layout()
-        plt.subplots_adjust(top=0.88, bottom=0.12, wspace=0.35)  # Increased spacing
-
-        # Save with high quality
-        plt.savefig('partC_plots/partC_reproducibility_results.png', dpi=300, bbox_inches='tight', 
-                    facecolor='white', edgecolor='none')
+        plt.savefig('partC_plots/partC_reproducibility_results.png', dpi=300, bbox_inches='tight')
         plt.show()
-        
-        # Also create individual run results plot with better layout
+
+        # Create individual run results plot
         self.plot_individual_runs()
 
-    def plot_individual_runs(self):
-        """Plot individual run results to show variability with better layout"""
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
-        
-        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
-        markers = ['o', 's', '^', 'D']
-        line_styles = ['-', '--', '-.', ':']
 
+    def plot_individual_runs(self):
+        """Plot individual run results to show variability"""
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
+        
+        colors = ['red', 'blue', 'green', 'orange']
+        
         for i, scenario in enumerate(self.scenarios):
             goodputs = self.results[scenario]['goodput']
             plrs = self.results[scenario]['plr']
 
             # Plot goodput for each run
             ax1.plot(range(1, self.runs + 1), goodputs, 
-                    marker=markers[i], linewidth=3, markersize=12, 
-                    label=scenario.upper(), color=colors[i], linestyle=line_styles[i],
-                    markeredgecolor='black', markeredgewidth=1)
-
+                    marker='o', linewidth=2, markersize=8, label=scenario.upper(), color=colors[i])
+            
             # Plot PLR for each run
             ax2.plot(range(1, self.runs + 1), plrs,
-                    marker=markers[i], linewidth=3, markersize=12, 
-                    label=scenario.upper(), color=colors[i], linestyle=line_styles[i],
-                    markeredgecolor='black', markeredgewidth=1)
+                    marker='s', linewidth=2, markersize=8, label=scenario.upper(), color=colors[i])
 
         # Configure first subplot
-        ax1.set_xlabel('Run Number', fontsize=14, fontweight='bold')
-        ax1.set_ylabel('Goodput (Mbps)', fontsize=14, fontweight='bold')
-        ax1.set_title('Goodput Variability Across 5 Runs', fontsize=16, fontweight='bold', pad=20)
-        ax1.legend(fontsize=12, loc='best', framealpha=0.9)
+        ax1.set_xlabel('Run Number', fontsize=12)
+        ax1.set_ylabel('Goodput (Mbps)', fontsize=12)
+        ax1.set_title('Goodput Across 5 Runs for Each TCP Algorithm', fontsize=14, fontweight='bold')
+        ax1.legend()
         ax1.grid(True, alpha=0.3)
         ax1.set_xticks(range(1, self.runs + 1))
-        ax1.tick_params(axis='both', which='major', labelsize=12)
 
         # Configure second subplot
-        ax2.set_xlabel('Run Number', fontsize=14, fontweight='bold')
-        ax2.set_ylabel('Packet Loss Rate (%)', fontsize=14, fontweight='bold')
-        ax2.set_title('PLR Variability Across 5 Runs', fontsize=16, fontweight='bold', pad=20)
-        ax2.legend(fontsize=12, loc='best', framealpha=0.9)
+        ax2.set_xlabel('Run Number', fontsize=12)
+        ax2.set_ylabel('Packet Loss Rate (%)', fontsize=12)
+        ax2.set_title('PLR Across 5 Runs for Each TCP Algorithm', fontsize=14, fontweight='bold')
+        ax2.legend()
         ax2.grid(True, alpha=0.3)
         ax2.set_xticks(range(1, self.runs + 1))
-        ax2.tick_params(axis='both', which='major', labelsize=12)
 
-        # Add overall title
-        fig.suptitle('Individual Run Performance: TCP Algorithm Consistency', 
-                    fontsize=18, fontweight='bold', y=0.98)
-        
-        # Adjust layout
         plt.tight_layout()
-        plt.subplots_adjust(top=0.90, wspace=0.3)
-
-        plt.savefig('partC_plots/partC_individual_runs.png', dpi=300, bbox_inches='tight',
-                    facecolor='white', edgecolor='none')
+        plt.savefig('partC_plots/partC_individual_runs.png', dpi=300, bbox_inches='tight')
         plt.show()
 
     def save_results_to_csv(self, stats_summary):

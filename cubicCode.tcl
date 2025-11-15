@@ -10,6 +10,16 @@
 
 set ns [new Simulator]
 
+# Accept command line arguments for random seed
+if {$argc > 0} {
+    set seed [lindex $argv 0]
+    puts "Using random seed: $seed"
+    ns-random $seed
+} else {
+    puts "Using default random seed"
+    ns-random 0
+}
+
 $ns color 1 Blue
 $ns color 2 Red
 

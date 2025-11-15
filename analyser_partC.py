@@ -155,7 +155,7 @@ class PartCAnalyser:
                       for s in scenarios]]
 
         # Create figure with two charts - larger size and more spacing
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(25, 10))
 
         # Define colors for better visual distinction
         colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
@@ -169,7 +169,7 @@ class PartCAnalyser:
 
         ax1.set_xlabel('TCP Algorithms', fontsize=14, fontweight='bold')
         ax1.set_ylabel('Goodput (Mbps)', fontsize=14, fontweight='bold')
-        ax1.set_title('Goodput Comparison with \n95% Confidence Intervals\n(5 Runs Each)', 
+        ax1.set_title('Goodput Comparison with 95% Confidence Intervals\n(5 Runs Each)', 
                      fontsize=14, fontweight='bold', pad=25)
         ax1.set_xticks(x_pos)
         ax1.set_xticklabels([s.upper() for s in scenarios], fontsize=13, fontweight='bold')
@@ -185,7 +185,7 @@ class PartCAnalyser:
             error_margin = goodput_errors[1][i]  # Use upper error for positioning
 
             # Position label just above the error bar with small margin
-            label_height = height + error_margin + (max_goodput * 0.03)
+            label_height = height + error_margin + 0.1
             ax1.text(bar.get_x() + bar.get_width()/2., label_height,
                     f'{height:.4f}\n±{error_margin:.4f}', 
                     ha='center', va='bottom', fontsize=11, fontweight='bold',
@@ -197,7 +197,7 @@ class PartCAnalyser:
         
         ax2.set_xlabel('TCP Algorithms', fontsize=14, fontweight='bold')
         ax2.set_ylabel('Packet Loss Rate (%)', fontsize=14, fontweight='bold')
-        ax2.set_title('Packet Loss Rate with \n95% Confidence Intervals \n(5 Runs Each)', 
+        ax2.set_title('Packet Loss Rate with 95% Confidence Intervals \n(5 Runs Each)', 
                      fontsize=14, fontweight='bold', pad=25)
         ax2.set_xticks(x_pos)
         ax2.set_xticklabels([s.upper() for s in scenarios], fontsize=13, fontweight='bold')
@@ -213,7 +213,7 @@ class PartCAnalyser:
             error_margin = plr_errors[1][i]  # Use upper error for positioning
 
             # Position label just above the error bar
-            label_height = height + error_margin + (max_plr * 0.08)
+            label_height = height + error_margin + 0.1
             ax2.text(bar.get_x() + bar.get_width()/2., label_height,
                     f'{height:.2f}%\n±{error_margin:.2f}%', 
                     ha='center', va='bottom', fontsize=11, fontweight='bold',
@@ -221,7 +221,7 @@ class PartCAnalyser:
 
         # Add overall figure title
         fig.suptitle('TCP Algorithm Performance: Reproducibility Analysis (5 Runs)', 
-                    fontsize=18, fontweight='bold', y=0.95)
+                    fontsize=18, fontweight='bold', y=0.98)
         
         # Adjust layout with more spacing between subplots
         plt.tight_layout()
@@ -279,7 +279,7 @@ class PartCAnalyser:
 
         # Add overall title
         fig.suptitle('Individual Run Performance: TCP Algorithm Consistency', 
-                    fontsize=18, fontweight='bold', y=0.95)
+                    fontsize=18, fontweight='bold', y=0.98)
         
         # Adjust layout
         plt.tight_layout()

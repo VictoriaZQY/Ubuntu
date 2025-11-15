@@ -11,30 +11,53 @@
 set ns [new Simulator]
 
 # Accept command line arguments for random seed
-if {$argc > 0} {
-    set seed [lindex $argv 0]
+if {$argc >= 3} {
+    set seed [lindex $argv 0]          ;# 1st arg: Random seed (controls simulation randomness)
+    set tracefile_arg [lindex $argv 1] ;# 2nd arg: Path for trace file (e.g., cubic_seed12345.tr)
+    set namfile_arg [lindex $argv 2]   ;# 3rd arg: Path for NAM visualization file (e.g., cubic_seed12345.nam)
     puts "Using random seed: $seed"
-    ns-random $seed
+    puts "Trace file saved to: $tracefile_arg"
+    puts "NAM file saved to: $namfile_arg"
+    ns-random $seed  ;# Initialize random number generator (critical for reproducibility)
 } else {
-    puts "Using default random seed"
-    ns-random 0
+    # Fallback to default values for standalone testing (not for Part C batch runs)
+    set seed 0
+    set tracefile_arg "renoTrace_default.tr"
+    set namfile_arg "reno_default.nam"
+    puts "Warning: Insufficient CLI arguments. Using default seed ($seed) and filenames."
+    puts "For Part C, use: ns renoCode.tcl <seed> <trace_file> <nam_file>"
+    ns-random $seed
 }
+
+
+# Derive jitter values deterministically from seed (ensures same seed → same jitter)
+set jitter0 [expr {double($seed % 100) / 1000.0}]  ;# Jitter 1: 0.000-0.099s (0-99ms)
+set jitter1 [expr {double(($seed / 100) % 100) / 1000.0}] ;# Jitter 2: 0.000-0.099s (0-99ms)
+# Compute final link delays (base delay + jitter; convert to seconds)
+set delay_n1n3 [expr {0.5 + $jitter0}]  ;# n1-n3: 500ms base + 0-99ms jitter
+set delay_n2n3 [expr {0.8 + $jitter1}]  ;# n2-n3: 800ms base + 0-99ms jitter
+set delay_n4n5 [expr {0.5 + $jitter0}]  ;# n4-n5: Match n1-n3 jitter logic (symmetric topology)
+set delay_n4n6 [expr {0.8 + $jitter1}]  ;# n4-n6: Match n2-n3 jitter logic (symmetric topology)
+set delay_n3n4 0.05                     ;# Bottleneck link (n3-n4): Fixed 50ms (core experiment variable → no jitter)
+
+
 
 $ns color 1 Blue
 $ns color 2 Red
 
-set namfile [open reno.nam w]
+set namfile [open $namfile_arg w]
 $ns namtrace-all $namfile
-set tracefile1 [open renoTrace.tr w]
+set tracefile1 [open $tracefile_arg w]
 $ns trace-all $tracefile1
 
 proc finish {} {
-    global ns namfile
-    $ns flush-trace
-    #Close the NAM trace file
+    global ns namfile tracefile1  ;# Include tracefile1 (new: previously missing)
+    $ns flush-trace  ;# Write all buffered data to files
+    # Close all open files
     close $namfile
-    #Execute NAM on the trace file
-    # exec nam reno.nam &
+    close $tracefile1  ;# New: Close trace file (prevents data corruption)
+    # Uncomment below to auto-launch NAM (not recommended for batch runs)
+    # exec nam $namfile_arg &
     exit 0
 }
 
@@ -45,11 +68,11 @@ set n4 [$ns node]
 set n5 [$ns node]
 set n6 [$ns node]
 
-$ns duplex-link $n1 $n3 4000Mb 500ms DropTail
-$ns duplex-link $n2 $n3 4000Mb 800ms DropTail 
-$ns duplex-link $n3 $n4 1000Mb 50ms DropTail
-$ns duplex-link $n4 $n5 4000Mb 500ms DropTail
-$ns duplex-link $n4 $n6 4000Mb 800ms DropTail
+$ns duplex-link $n1 $n3 4000Mb $delay_n1n3 DropTail  ;# New: Uses jitter-adjusted delay (prev: fixed 500ms)
+$ns duplex-link $n2 $n3 4000Mb $delay_n2n3 DropTail  ;# New: Uses jitter-adjusted delay (prev: fixed 800ms)
+$ns duplex-link $n3 $n4 1000Mb $delay_n3n4 DropTail  ;# Unchanged: Bottleneck link (fixed 50ms)
+$ns duplex-link $n4 $n5 4000Mb $delay_n4n5 DropTail  ;# New: Uses jitter-adjusted delay (prev: fixed 500ms)
+$ns duplex-link $n4 $n6 4000Mb $delay_n4n6 DropTail  ;# New: Uses jitter-adjusted delay (prev: fixed 800ms)
 
 $ns queue-limit $n3 $n4 10
 $ns queue-limit $n4 $n3 10
